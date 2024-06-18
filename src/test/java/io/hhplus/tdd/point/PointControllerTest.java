@@ -1,9 +1,10 @@
 package io.hhplus.tdd.point;
 
-import io.hhplus.tdd.point.PointService;
-import io.hhplus.tdd.point.UserPoint;
-import io.hhplus.tdd.point.PointHistory;
-import io.hhplus.tdd.point.TransactionType;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,13 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.List;
-
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import io.hhplus.tdd.ApiControllerAdvice;
 
 @ExtendWith(MockitoExtension.class)
 class PointControllerTest {
@@ -36,9 +31,15 @@ class PointControllerTest {
 
 	@BeforeEach
 	void setUp() {
-		mockMvc = MockMvcBuilders.standaloneSetup(pointController).build();
+		mockMvc = MockMvcBuilders
+			.standaloneSetup(pointController)
+			.setControllerAdvice(new ApiControllerAdvice())
+			.build();
 	}
 
+	/**
+	 * 유저의 포인트 조회
+	 */
 	@Test
 	void testGetUserPoint() throws Exception {
 		long userId = 1L;
@@ -50,6 +51,9 @@ class PointControllerTest {
 			.andExpect(content().json("{\"id\":1,\"point\":100,\"updateMillis\":" + userPoint.updateMillis() + "}"));
 	}
 
+	/**
+	 * 유저의 포인트 내역 조회
+	 */
 	@Test
 	void testGetPointHistories() throws Exception {
 		long userId = 1L;
@@ -66,6 +70,10 @@ class PointControllerTest {
 				"]"));
 	}
 
+	/**
+	 * 유저의 포인트 충전 테스트
+	 */
+
 	@Test
 	void testChargePoint() throws Exception {
 		long userId = 1L;
@@ -80,6 +88,10 @@ class PointControllerTest {
 			.andExpect(content().json("{\"id\":1,\"point\":150,\"updateMillis\":" + userPoint.updateMillis() + "}"));
 	}
 
+	/**
+	 * 유저의 포인트 사용 테스트
+	 */
+
 	@Test
 	void testUsePoint() throws Exception {
 		long userId = 1L;
@@ -92,5 +104,21 @@ class PointControllerTest {
 				.content(String.valueOf(amount)))
 			.andExpect(status().isOk())
 			.andExpect(content().json("{\"id\":1,\"point\":80,\"updateMillis\":" + userPoint.updateMillis() + "}"));
+	}
+
+	/**
+	 * 예외 상황 테스트
+	 */
+	@Test
+	void testUsePointInsufficientBalance() throws Exception {
+		long userId = 1L;
+		long amount = 200;
+		when(pointService.usePoint(userId, amount)).thenThrow(new IllegalArgumentException("포인트가 부족합니다."));
+
+		mockMvc.perform(patch("/point/{id}/use", userId)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(String.valueOf(amount)))
+			.andExpect(status().isBadRequest())
+			.andExpect(content().json("{\"code\":\"400\",\"message\":\"포인트가 부족합니다.\"}"));
 	}
 }
