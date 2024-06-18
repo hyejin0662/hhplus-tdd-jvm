@@ -6,16 +6,15 @@ import org.springframework.stereotype.Service;
 
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class PointService {
+
 	private final UserPointTable userPointTable;
 	private final PointHistoryTable pointHistoryTable;
 
-	public PointService(UserPointTable userPointTable, PointHistoryTable pointHistoryTable) {
-		this.userPointTable = userPointTable;
-		this.pointHistoryTable = pointHistoryTable;
-	}
 
 	public UserPoint getUserPoint(long id) {
 		return userPointTable.selectById(id);
@@ -25,14 +24,14 @@ public class PointService {
 		return pointHistoryTable.selectAllByUserId(id);
 	}
 
-	public UserPoint chargePoint(long id, long amount) {
+	public synchronized UserPoint chargePoint(long id, long amount) {
 		UserPoint userPoint = getUserPoint(id);
 		userPoint = userPointTable.insertOrUpdate(id, userPoint.point() + amount);
 		pointHistoryTable.insert(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
 		return userPoint;
 	}
 
-	public UserPoint usePoint(long id, long amount) {
+	public synchronized UserPoint usePoint(long id, long amount) {
 		UserPoint userPoint = getUserPoint(id);
 		if (userPoint.point() < amount) {
 			throw new IllegalArgumentException("포인트가 부족합니다.");
