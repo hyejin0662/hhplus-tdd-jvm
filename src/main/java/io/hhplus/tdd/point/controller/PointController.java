@@ -6,8 +6,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.hhplus.tdd.point.dto.request.PointChargeRequest;
+import io.hhplus.tdd.point.dto.request.PointUseRequest;
 import io.hhplus.tdd.point.dto.response.PointHistoryResponse;
-import io.hhplus.tdd.point.dto.response.UserPointResponse;
+import io.hhplus.tdd.point.dto.response.PointChargeResponse;
+import io.hhplus.tdd.point.dto.response.PointSearchResponse;
+import io.hhplus.tdd.point.dto.response.PointUseResponse;
 import io.hhplus.tdd.point.service.PointService;
 import lombok.RequiredArgsConstructor;
 
@@ -19,20 +23,13 @@ public class PointController {
     private static final Logger log = LoggerFactory.getLogger(PointController.class);
     private final PointService pointService;
 
-    /**
-     * TODO - 특정 유저의 포인트를 조회하는 기능을 작성해주세요.
-     */
 
 
     @GetMapping("{id}")
-    public UserPointResponse point(@PathVariable long id) {
+    public PointSearchResponse point(@PathVariable long id) {
         return pointService.getUserPoint(id);
     }
 
-
-    /**
-     * TODO - 특정 유저의 포인트 충전/이용 내역을 조회하는 기능을 작성해주세요.
-     */
 
 
     @GetMapping("{id}/histories")
@@ -41,25 +38,24 @@ public class PointController {
     }
 
 
-    /**
-     * TODO - 특정 유저의 포인트를 충전하는 기능을 작성해주세요.
-     */
-
 
     @PatchMapping("{id}/charge")
-    public PointHistoryResponse charge(@PathVariable long id, @RequestBody long amount) {
-        return pointService.chargePoint(id, amount);
+    public PointChargeResponse charge(@PathVariable long id, @RequestBody PointChargeRequest request) {
+        if (request.getPoint() <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 충전 값입니다.");
+        }
+        return pointService.chargePoint(id, request);
     }
 
-    /**
-     * TODO - 특정 유저의 포인트를 사용하는 기능을 작성해주세요.
-     */
+
 
     @PatchMapping("{id}/use")
-    public PointHistoryResponse use(@PathVariable long id, @RequestBody long amount) {
-        return pointService.usePoint(id, amount);
+    public PointUseResponse use(@PathVariable long id, @RequestBody PointUseRequest request) {
+        if (request.getPoint() <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 사용 값입니다.");
+        }
+        return pointService.usePoint(id, request);
     }
-
 }
 
 

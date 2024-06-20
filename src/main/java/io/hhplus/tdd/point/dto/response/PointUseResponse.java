@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PointHistoryResponse {
+public class PointUseResponse {
 
-    private long userId;
-    private long amount;
-    private TransactionType type;
-    private long updateMillis;
+	private long userId;
+	private long amount;
+	private TransactionType type;
+	private long updateMillis;
 }

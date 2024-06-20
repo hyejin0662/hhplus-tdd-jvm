@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserPointRequest {
-    private long id;
-    private long point;
+public class PointUseRequest {
+	private long id;
+	private long point;
 }
