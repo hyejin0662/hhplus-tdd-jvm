@@ -42,21 +42,27 @@ public class PointServiceImpl implements PointService {
 
 
     @Override
-    public synchronized PointChargeResponse  chargePoint(long id,PointChargeRequest request) {
+    public synchronized PointChargeResponse chargePoint(long id, PointChargeRequest request) {
+        if (request.getPoint() <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 충전 값입니다.");
+        }
         UserPoint userPoint = userPointTable.selectById(request.getId());
         userPoint = userPointTable.insertOrUpdate(request.getId(), userPoint.point() + request.getPoint());
         PointHistory history = pointHistoryTable.insert(request.getId(), request.getPoint(), TransactionType.CHARGE, System.currentTimeMillis());
-        return new PointChargeResponse( history.userId(), history.amount(),TransactionType.CHARGE, history.updateMillis());
+        return new PointChargeResponse(history.userId(), history.amount(), TransactionType.CHARGE, history.updateMillis());
     }
 
     @Override
-    public synchronized PointUseResponse usePoint(long id,PointUseRequest request) {
+    public synchronized PointUseResponse usePoint(long id, PointUseRequest request) {
+        if (request.getPoint() <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 사용 값입니다.");
+        }
         UserPoint userPoint = userPointTable.selectById(request.getId());
         if (userPoint.point() < request.getPoint()) {
             throw new IllegalArgumentException("포인트가 부족합니다.");
         }
         userPoint = userPointTable.insertOrUpdate(request.getId(), userPoint.point() - request.getPoint());
-        PointHistory history = pointHistoryTable.insert(request.getId(), userPoint.point() - request.getPoint(), TransactionType.USE, System.currentTimeMillis());
+        PointHistory history = pointHistoryTable.insert(request.getId(), request.getPoint(), TransactionType.USE, System.currentTimeMillis());
         return new PointUseResponse(history.userId(), history.amount(), TransactionType.USE, history.updateMillis());
     }
 }

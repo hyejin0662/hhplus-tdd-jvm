@@ -39,21 +39,14 @@ public class PointController {
 
 
 
+
     @PatchMapping("{id}/charge")
     public PointChargeResponse charge(@PathVariable long id, @RequestBody PointChargeRequest request) {
-        if (request.getPoint() <= 0) {
-            throw new IllegalArgumentException("유효하지 않은 충전 값입니다.");
-        }
         return pointService.chargePoint(id, request);
     }
 
-
-
     @PatchMapping("{id}/use")
     public PointUseResponse use(@PathVariable long id, @RequestBody PointUseRequest request) {
-        if (request.getPoint() <= 0) {
-            throw new IllegalArgumentException("유효하지 않은 사용 값입니다.");
-        }
         return pointService.usePoint(id, request);
     }
 }
