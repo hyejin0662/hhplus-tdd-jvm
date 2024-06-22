@@ -1,11 +1,11 @@
 package io.hhplus.tdd.point.service.impl;
 
-import io.hhplus.tdd.database.PointHistoryTable;
-import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.dto.request.PointChargeRequest;
 import io.hhplus.tdd.point.dto.request.PointUseRequest;
 import io.hhplus.tdd.point.dto.response.PointSearchResponse;
 import io.hhplus.tdd.point.dto.response.PointUseResponse;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
 import io.hhplus.tdd.point.type.TransactionType;
 import io.hhplus.tdd.point.entity.UserPoint;
 import io.hhplus.tdd.point.dto.response.PointHistoryResponse;
@@ -16,25 +16,24 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PointServiceImpl implements PointService {
 
-    private final UserPointTable userPointTable;
-    private final PointHistoryTable pointHistoryTable;
+    private final UserPointRepository userPointRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     @Override
     public PointSearchResponse getUserPoint(long id) {
-        UserPoint userPoint = userPointTable.selectById(id);
+        UserPoint userPoint = userPointRepository.selectById(id);
         return new PointSearchResponse(userPoint.id(), userPoint.point(), userPoint.updateMillis());
     }
 
     @Override
     public List<PointHistoryResponse> getPointHistories(long id) {
-        return pointHistoryTable.selectAllByUserId(id)
+        return pointHistoryRepository.selectAllByUserId(id)
             .stream()
             .map(history -> new PointHistoryResponse( history.userId(), history.amount(), history.type(), history.updateMillis()))
             .collect(Collectors.toList());
@@ -46,9 +45,9 @@ public class PointServiceImpl implements PointService {
         if (request.getPoint() <= 0) {
             throw new IllegalArgumentException("유효하지 않은 충전 값입니다.");
         }
-        UserPoint userPoint = userPointTable.selectById(request.getId());
-        userPoint = userPointTable.insertOrUpdate(request.getId(), userPoint.point() + request.getPoint());
-        PointHistory history = pointHistoryTable.insert(request.getId(), request.getPoint(), TransactionType.CHARGE, System.currentTimeMillis());
+        UserPoint userPoint = userPointRepository.selectById(request.getId());
+        userPoint = userPointRepository.insertOrUpdate(request.getId(), userPoint.point() + request.getPoint());
+        PointHistory history = pointHistoryRepository.insert(request.getId(), request.getPoint(), TransactionType.CHARGE, System.currentTimeMillis());
         return new PointChargeResponse(history.userId(), history.amount(), TransactionType.CHARGE, history.updateMillis());
     }
 
@@ -57,12 +56,12 @@ public class PointServiceImpl implements PointService {
         if (request.getPoint() <= 0) {
             throw new IllegalArgumentException("유효하지 않은 사용 값입니다.");
         }
-        UserPoint userPoint = userPointTable.selectById(request.getId());
+        UserPoint userPoint = userPointRepository.selectById(request.getId());
         if (userPoint.point() < request.getPoint()) {
             throw new IllegalArgumentException("포인트가 부족합니다.");
         }
-        userPoint = userPointTable.insertOrUpdate(request.getId(), userPoint.point() - request.getPoint());
-        PointHistory history = pointHistoryTable.insert(request.getId(), request.getPoint(), TransactionType.USE, System.currentTimeMillis());
+        userPoint = userPointRepository.insertOrUpdate(request.getId(), userPoint.point() - request.getPoint());
+        PointHistory history = pointHistoryRepository.insert(request.getId(), request.getPoint(), TransactionType.USE, System.currentTimeMillis());
         return new PointUseResponse(history.userId(), history.amount(), TransactionType.USE, history.updateMillis());
     }
 }
