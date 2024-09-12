@@ -1,4 +1,4 @@
-package io.hhplus.tdd;
+package io.hhplus.tdd.point.error;
 
 public record ErrorResponse(
         String code,
